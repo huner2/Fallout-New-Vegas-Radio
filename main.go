@@ -235,76 +235,54 @@ func loop(s *discordgo.Session, m *discordgo.MessageCreate) {
 	debug("Speaking")
 	vc.Speaking(true)
 	playing = true
-	opened := false
+	i := 0
+	var sname string
 	for {
 		// quick pause
 		time.Sleep(250 * time.Millisecond)
 		// Get new seed
 		rand.Seed(time.Now().UTC().UnixNano())
-		// Play opener transition
-
-		if !opened {
-			opened = true
+		if i == 0 {
 			if done := playAudio(vc, special["Opening"]); done {
 				break
 			}
-			// Play any song
-			song := songs[rand.Intn(len(songs))]
-			if done := playAudio(vc, song.Data); done {
-				break
-			}
-		}
-
-		// quick pause
-		time.Sleep(250 * time.Millisecond)
-
-		// Play any song
-		song := songs[rand.Intn(len(songs))]
-		if done := playAudio(vc, song.Data); done {
-			break
-		}
-
-		// quick pause
-		time.Sleep(250 * time.Millisecond)
-
-		// Play any song
-		song = songs[rand.Intn(len(songs))]
-		if done := playAudio(vc, song.Data); done {
-			break
-		}
-
-		// quick pause
-		time.Sleep(250 * time.Millisecond)
-
-		// Play a story
-		story := stories[rand.Intn(len(stories))]
-		if done := playAudio(vc, story.Data); done {
-			break
-		}
-
-		// quick pause
-		time.Sleep(250 * time.Millisecond)
-
-		transition := transitions[rand.Intn(len(stories))]
-		sname, special := transMap[transition.Name]
-		if !special {
-			// Play any song
-			song := songs[rand.Intn(len(songs))]
-			if done := playAudio(vc, song.Data); done {
-				break
-			}
 		} else {
-			var song audioT
-			for _, s := range songs {
-				if s.Name == sname {
-					song = s
+			if i%5 == 0 {
+				transition := transitions[rand.Intn(len(transitions))]
+				if done := playAudio(vc, transition.Data); done {
 					break
 				}
-			}
-			if done := playAudio(vc, song.Data); done {
-				break
+				if sn, special := transMap[transition.Name]; special {
+					sname = sn
+				}
+			} else if i%4 == 0 {
+				story := stories[rand.Intn(len(stories))]
+				if done := playAudio(vc, story.Data); done {
+					break
+				}
+			} else {
+				if sname != "" {
+					var song audioT
+					for _, s := range songs {
+						if s.Name == sname {
+							song = s
+							break
+						}
+					}
+					sname = ""
+					if done := playAudio(vc, song.Data); done {
+						break
+					}
+				} else {
+					song := songs[rand.Intn(len(songs))]
+					if done := playAudio(vc, song.Data); done {
+						break
+					}
+				}
 			}
 		}
+
+		i++
 	}
 
 	vc.Speaking(false)
