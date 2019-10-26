@@ -169,7 +169,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		command := strings.ToLower(split[1])
 		if command == "join" {
-			if playing && !paused {
+			if !playing && !paused {
 				loop(s, m)
 			}
 		} else if command == "stop" {
@@ -360,6 +360,7 @@ func stop(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	playing = false
+	paused = false
 }
 
 func pause(s *discordgo.Session, m *discordgo.MessageCreate) {
