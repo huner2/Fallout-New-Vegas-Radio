@@ -244,7 +244,7 @@ func loop(s *discordgo.Session, m *discordgo.MessageCreate) {
 	var sname string
 	for {
 		// quick pause
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(50 * time.Millisecond)
 		// Get new seed
 		rand.Seed(time.Now().UTC().UnixNano())
 		if i == 0 {
