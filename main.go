@@ -49,7 +49,7 @@ var transMap = map[string]string{
 }
 
 // HELPMESSAGE is the help message
-const HELPMESSAGE = "Available Commands:\nHelp - Displays this help message\nJoin - Joins the voice channel"
+const HELPMESSAGE = "Available Commands:\nHelp - Displays this help message\nJoin - Joins the voice channel\nStop - Leaves voice channel\nPause - Pauses playback\nPlay - Resumes playback"
 
 // JOINVCMESSAGE is the message printed when a user is not in a voice channel
 const JOINVCMESSAGE = "You must be in a voice channel to run this command"
@@ -169,9 +169,13 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		command := strings.ToLower(split[1])
 		if command == "join" {
-			loop(s, m)
+			if playing && !paused {
+				loop(s, m)
+			}
 		} else if command == "stop" {
-			stop(s, m)
+			if playing {
+				stop(s, m)
+			}
 		} else if command == "pause" {
 			if !paused {
 				pause(s, m)
