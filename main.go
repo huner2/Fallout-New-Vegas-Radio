@@ -35,6 +35,7 @@ var token string // Bot permissions integer 3214336
 var vc discordgo.VoiceConnection
 var playing = false
 var paused = false
+var skipping = false
 
 var transMap = map[string]string{
 	"BlueMoonTransition.dca": "BlueMoon.dca",
@@ -49,7 +50,7 @@ var transMap = map[string]string{
 }
 
 // HELPMESSAGE is the help message
-const HELPMESSAGE = "Available Commands:\nHelp - Displays this help message\nJoin - Joins the voice channel\nStop - Leaves voice channel\nPause - Pauses playback\nPlay - Resumes playback"
+const HELPMESSAGE = "Available Commands:\nHelp - Displays this help message\nJoin - Joins the voice channel\nStop - Leaves voice channel\nPause - Pauses playback\nPlay - Resumes playback\nSkip - Skips current radio section"
 
 // JOINVCMESSAGE is the message printed when a user is not in a voice channel
 const JOINVCMESSAGE = "You must be in a voice channel to run this command"
@@ -184,6 +185,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if paused {
 				play(s, m)
 			}
+		} else if command == "skip" {
+			if playing {
+				skip(s, m)
+			}
 		} else {
 			printHelp(s, m)
 		}
@@ -304,6 +309,9 @@ func playAudio(vc *discordgo.VoiceConnection, data *[][]byte) bool {
 					break
 				}
 			}
+		} else if skipping {
+			skipping = false
+			break
 		}
 		vc.OpusSend <- buff
 	}
@@ -399,4 +407,34 @@ func play(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	paused = false
+}
+
+func skip(s *discordgo.Session, m *discordgo.MessageCreate) {
+	ch, err := s.State.Channel(m.ChannelID)
+	if err != nil {
+		debug("Could not find channel")
+		return
+	}
+
+	guild, err := s.State.Guild(ch.GuildID)
+	if err != nil {
+		debug("Could not find guild")
+		return
+	}
+
+	found := false
+
+	for _, vs := range guild.VoiceStates {
+		if vs.UserID == m.Author.ID {
+			found = true
+		}
+	}
+
+	if !found {
+		debug("Could not find user in voice states")
+		s.ChannelMessageSend(m.ChannelID, JOINVCMESSAGE)
+		return
+	}
+
+	skipping = true
 }
